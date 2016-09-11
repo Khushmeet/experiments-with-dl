@@ -2,9 +2,11 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import style
 from sklearn.preprocessing import scale
 from sklearn.cross_validation import train_test_split
+from sklearn.utils import shuffle
 style.use('ggplot')
 
 '''
@@ -80,10 +82,17 @@ X = scale(X)
 k_means = KMeans(n_clusters=2)
 k_means.fit(x_train)
 
+print(titanic_df.head())
+
 # k-means clusters
+# visualization
 clusters = k_means.cluster_centers_
-p3 = plt.subplot2grid((2,3),(0,1))
-plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+x_train_shuffle =shuffle(x_train)
+ax.scatter(x_train_shuffle[:,3], x_train_shuffle[:,7], x_train_shuffle[:,9], c='r')
+ax.scatter(clusters[0], clusters[1], c='b', marker='o')
+plt.show()
 
 correct = 0
 for i in range(len(X)):
@@ -99,5 +108,3 @@ print('Accuracy:', correct/len(X))
 predicted = k_means.predict(x_test)
 for i in range(len(x_test)):
     print('Predicted value:', predicted[i], '\t', 'Actual vaue:', y_test[i])
-
-# visualization
