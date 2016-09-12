@@ -27,7 +27,7 @@ home.dest Home/Destination
 '''
 
 titanic_df = pd.read_excel('data/titanic.xls')
-titanic_df.drop(['name','body'], 1, inplace=True)
+titanic_df.drop(['body'], 1, inplace=True)
 titanic_df.fillna(0, inplace=True)
 
 
