@@ -54,8 +54,8 @@ output_nodes = 2
 classes = 2
 batch_size = 7
 
-x = tf.placeholder('float', [None, 9])
-y = tf.placeholder('float', [None, classes])
+x = tf.placeholder('float')
+y = tf.placeholder('float')
 
 
 def model(x):
@@ -65,13 +65,10 @@ def model(x):
                 'bias': tf.Variable(tf.random_normal(h2_nodes))}
     out_layer = {'weight': tf.Variable(tf.random_normal(h2_nodes, output_nodes)),
                  'bias': tf.Variable(tf.random_normal(output_nodes))}
-
     l1_value = tf.add(tf.matmul(x, h1_layer['weight']), h1_layer['bias'])
     l1_value = tf.nn.relu(l1_value)
-
     l2_value = tf.add(tf.matmul(l1_value, h2_layer['weight']), h2_layer['bias'])
     l2_value = tf.nn.relu(l2_value)
-
     out_value = tf.add(tf.matmul(l2_value, out_layer['weight']), out_layer['bias'])
     return out_value
 
@@ -80,9 +77,6 @@ def train(x_train, y_train, x_test, y_test):
     predicted = model(x_train)
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(predicted, y))
     optimizer = tf.train.AdamOptimizer().minimize(cost)
-
-    epochs = 10
-
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         c = sess.run([optimizer, cost], feed_dict={x:x, y:y_train})
