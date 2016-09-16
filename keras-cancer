@@ -1,0 +1,72 @@
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation
+from keras.optimizers import SGD
+import pandas as pd
+import numpy as np
+
+'''
+   1. Sample code number            id number
+   2. Clump Thickness               1 - 10
+   3. Uniformity of Cell Size       1 - 10
+   4. Uniformity of Cell Shape      1 - 10
+   5. Marginal Adhesion             1 - 10
+   6. Single Epithelial Cell Size   1 - 10
+   7. Bare Nuclei                   1 - 10
+   8. Bland Chromatin               1 - 10
+   9. Normal Nucleoli               1 - 10
+  10. Mitoses                       1 - 10
+  11. Class:                        (2 for benign, 4 for malignant)
+'''
+
+
+# breast cancer data
+cancer_df = pd.read_csv('data/breast-cancer-wisconsin.data',
+                        header=None,
+                        names=['Sample code number', 'Clump Thickness', 'Uniformity of Cell Size',
+                               'Uniformity of Cell Shape', 'Marginal Adhesion', 'Single Epithelial Cell Size',
+                               'Bare Nuclei', 'Bland Chromatin', 'Normal Nucleoli', 'Mitoses', 'Class']
+                        )
+cancer_df.replace('?', 0, inplace=True)
+cancer_df['Class'].replace(2, 0, inplace=True)
+cancer_df['Class'].replace(4, 1, inplace=True)
+X_cancer_train = cancer_df.drop(['Sample code number','Class'], 1)
+Y_cancer_train = cancer_df['Class']
+
+#print(X_cancer_train.head())
+#print(Y_cancer_train.head())
+
+X_cancer_train = np.array(X_cancer_train)
+Y_cancer_train = np.array(Y_cancer_train)
+
+X_cancer_test = X_cancer_train[679:, :]
+Y_cancer_test = Y_cancer_train[679:]
+X_cancer_train = X_cancer_train[:-20, :]
+Y_cancer_train = Y_cancer_train[:-20]
+
+print(X_cancer_train.shape)
+print(Y_cancer_train.shape)
+print(X_cancer_test.shape)
+print(Y_cancer_test.shape)
+
+model = Sequential()
+model.add(Dense(679, input_dim=9, init='uniform'))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+model.add(Dense(679, init='uniform'))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+model.add(Dense(1, init='uniform'))
+model.add(Activation('relu'))
+
+sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+model.compile(loss='binary_crossentropy',
+              optimizer=sgd,
+              metrics=['accuracy'])
+
+model.fit(X_cancer_train, Y_cancer_train,
+          nb_epoch=20,
+          batch_size=16)
+score = model.evaluate(X_cancer_test, Y_cancer_test, batch_size=7)
+
+# Activation - tanh -> acc:0.3461
+# Activation - relu -> acc:0.6539
