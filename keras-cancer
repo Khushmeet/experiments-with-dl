@@ -3,6 +3,7 @@ from keras.layers import Dense, Dropout, Activation
 from keras.optimizers import SGD
 import pandas as pd
 import numpy as np
+import pprint
 
 '''
    1. Sample code number            id number
@@ -67,6 +68,12 @@ model.fit(X_cancer_train, Y_cancer_train,
           nb_epoch=20,
           batch_size=16)
 score = model.evaluate(X_cancer_test, Y_cancer_test, batch_size=7)
+
+
+# ------------
+pp = pprint.PrettyPrinter(indent=4)
+model.summary()
+pp.pprint(model.to_json())
 
 # Activation - tanh -> acc:0.3461
 # Activation - relu -> acc:0.6539

@@ -1,0 +1,10 @@
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import  pad_sequences
+
+test = 'khushmeet singh shergill'
+
+tokenizer = Tokenizer(nb_words=10)
+tokenizer.fit_on_texts(test)
+
+word_index = tokenizer.word_index
+print(word_index)
