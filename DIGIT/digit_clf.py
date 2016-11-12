@@ -18,13 +18,14 @@ train_y = train_x['label']
 train_x = train_x.drop(['label'], 1)
 train_x = np.array(train_x)
 train_y = np.array(train_y)
-valid_x = train_x[41900:,:]
+valid_x = train_x[41900:, :]
 valid_y = train_y[41900:]
-train_x = train_x[:-100,:]
+train_x = train_x[:-100, :]
 train_y = train_y[:-100]
 
 test_x = pd.read_csv('test.csv')
 test_x = np.array(test_x)
+
 
 def dense_to_one_hot(labels_dense, num_classes):
     num_labels = labels_dense.shape[0]
@@ -41,6 +42,7 @@ print('Train Y : ', train_y.shape)
 print('Validation X : ', valid_x.shape)
 print('Validation Y : ', valid_y.shape)
 print('Test X : ', test_x.shape)
+
 
 def conv2d(input, W):
     return tf.nn.conv2d(input, W, strides=[1, 1, 1, 1], padding='SAME')
@@ -81,6 +83,7 @@ num_examples = train_x.shape[0]
 index_in_epoch = 0
 epochs_completed = 0
 
+
 def next_batch(batch_size):
     global train_x
     global train_y
@@ -107,23 +110,29 @@ def train_network(input):
     prediction = cnn(input)
     out = tf.nn.softmax_cross_entropy_with_logits(prediction, y)
     cost = tf.reduce_mean(out)
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    optimizer = tf.train.AdamOptimizer(
+        learning_rate=learning_rate).minimize(cost)
 
     with tf.Session() as sess:
         saver = tf.train.Saver()
         sess.run(tf.initialize_all_variables())
-        predict = tf.argmax(prediction,1)
+        predict = tf.argmax(prediction, 1)
+        ImageId = [i + 1 for i in range(28000)]
         if os.path.exists('digit_model.ckpt'):
             saver.restore(sess, 'digit_model.ckpt')
             print('Model restored...')
-            print(sess.run(predict, feed_dict={x: valid_x}))
+            final_predictions = sess.run(predict, feed_dict={x: test_x})
+            final = final_predictions.astype(int)
+            np.savetxt('submission.csv', (final),
+                       delimiter='\n', header='ImageId, Label')
         else:
             print('Training...')
             for epoch in range(epochs):
                 loss = 0
                 for i in range(int(num_examples / batch_size)):
                     input_x, input_y = next_batch(batch_size)
-                    v, c = sess.run([optimizer, cost], feed_dict={x: input_x, y: input_y})
+                    v, c = sess.run([optimizer, cost], feed_dict={
+                                    x: input_x, y: input_y})
                     loss += c
                 print('Epoch:', epoch + 1, 'Loss:', loss)
             correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
