@@ -53,26 +53,26 @@ def maxpool2d(input):
 
 
 def cnn(input):
-    weights = {'W_conv1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
-               'W_conv2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
-               'W_fc': tf.Variable(tf.random_normal([7 * 7 * 64, 1024])),
+    weights = {'conv1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
+               'conv2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
+               'fc': tf.Variable(tf.random_normal([7 * 7 * 64, 1024])),
                'out': tf.Variable(tf.random_normal([1024, classes]))}
 
-    biases = {'b_conv1': tf.Variable(tf.random_normal([32])),
-              'b_conv2': tf.Variable(tf.random_normal([64])),
-              'b_fc': tf.Variable(tf.random_normal([1024])),
+    biases = {'conv1': tf.Variable(tf.random_normal([32])),
+              'conv2': tf.Variable(tf.random_normal([64])),
+              'fc': tf.Variable(tf.random_normal([1024])),
               'out': tf.Variable(tf.random_normal([classes]))}
 
     input = tf.reshape(input, shape=[-1, 28, 28, 1])
 
-    conv1 = tf.nn.relu(conv2d(input, weights['W_conv1']) + biases['b_conv1'])
+    conv1 = tf.nn.relu(conv2d(input, weights['conv1']) + biases['conv1'])
     conv1 = maxpool2d(conv1)
 
-    conv2 = tf.nn.relu(conv2d(conv1, weights['W_conv2']) + biases['b_conv2'])
+    conv2 = tf.nn.relu(conv2d(conv1, weights['conv2']) + biases['conv2'])
     conv2 = maxpool2d(conv2)
 
     fc = tf.reshape(conv2, [-1, 7 * 7 * 64])
-    fc = tf.nn.relu(tf.matmul(fc, weights['W_fc']) + biases['b_fc'])
+    fc = tf.nn.relu(tf.matmul(fc, weights['fc']) + biases['fc'])
     fc = tf.nn.dropout(fc, keep_rate)
 
     output = tf.matmul(fc, weights['out']) + biases['out']
@@ -116,15 +116,16 @@ def train_network(input):
     with tf.Session() as sess:
         saver = tf.train.Saver()
         sess.run(tf.initialize_all_variables())
-        predict = tf.argmax(prediction, 1)
-        ImageId = [i + 1 for i in range(28000)]
         if os.path.exists('digit_model.ckpt'):
+            predict = tf.argmax(prediction, 1)
+            ImageId = [i + 1 for i in range(28000)]
             saver.restore(sess, 'digit_model.ckpt')
             print('Model restored...')
+            print('Predicting on test data...')
             final_predictions = sess.run(predict, feed_dict={x: test_x})
-            final = final_predictions.astype(int)
-            np.savetxt('submission.csv', (final),
-                       delimiter='\n', header='ImageId, Label')
+            final_predictions = final_predictions.astype(int)
+            df = pd.DataFrame({'ImageId': ImageId, 'Label': final_predictions})
+            df.to_csv("submission.csv", index=False)
         else:
             print('Training...')
             for epoch in range(epochs):
@@ -140,6 +141,12 @@ def train_network(input):
             print('Accuracy:', accuracy.eval({x: valid_x, y: valid_y}))
             path = saver.save(sess, 'digit_model.ckpt')
             print('Model save in', path)
+            predict = tf.argmax(prediction, 1)
+            ImageId = [i + 1 for i in range(28000)]
+            final_predictions = sess.run(predict, feed_dict={x: test_x})
+            final_predictions = final_predictions.astype(int)
+            df = pd.DataFrame({'ImageId': ImageId, 'Label': final_predictions})
+            df.to_csv("submission.csv", index=False)
 
 
 train_network(x)
